@@ -6,7 +6,7 @@ SceneClass::SceneClass()
 {
 	// Create the model object.
 	
-	m_models[0] = new ModelClass(TranslateMatrix(-3.5f, 0.0f, 0.0f), TranslateMatrix(-1.0f, 1.0f, 1.0f), 0.0f);
+	m_models[0] = new ModelClass;
 	m_models[1] = new ModelClass;		//Ground
 	m_models[2] = new ModelClass;		//FerrisWheelBase
 	m_models[3] = new ModelClass;		//FerrisWheelWheel
@@ -27,7 +27,7 @@ bool SceneClass::Initialize(D3DClass* m_D3D, HWND hwnd) {
 	bool result = true;
 
 	
-	// Initialize the model object.
+	// Initialize the skybox object.
 	result = m_models[0]->Initialize(m_D3D->GetDevice(), "../Engine/data/SkyBoxMesh.txt", L"../Engine/data/SkyBoxTexture.dds");
 	if (!result)
 	{
@@ -35,7 +35,7 @@ bool SceneClass::Initialize(D3DClass* m_D3D, HWND hwnd) {
 	return false;
 	}
 	
-	// Initialize the model object.
+	// Initialize the first object.
 	result = m_models[1]->Initialize(m_D3D->GetDevice(), "../Engine/data/LandCylinder.txt", L"../Engine/data/grassTexture.dds");
 	if (!result)
 	{

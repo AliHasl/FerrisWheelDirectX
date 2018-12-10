@@ -18,6 +18,8 @@ PositionClass::PositionClass()
 
 	m_forwardSpeed   = 0.0f;
 	m_backwardSpeed  = 0.0f;
+	m_leftSpeed		 = 0.0f;
+	m_rightSpeed	 = 0.0f;
 	m_upwardSpeed    = 0.0f;
 	m_downwardSpeed  = 0.0f;
 	m_leftTurnSpeed  = 0.0f;
@@ -234,13 +236,13 @@ void PositionClass::TurnLeft(bool keydown)
 
 	// Update the rotation.
 	m_rotationY -= m_leftTurnSpeed;
-
+	
 	// Keep the rotation in the 0 to 360 range.
 	if(m_rotationY < 0.0f)
 	{
 		m_rotationY += 360.0f;
 	}
-
+	
 	return;
 }
 
@@ -279,6 +281,79 @@ void PositionClass::TurnRight(bool keydown)
 	return;
 }
 
+void PositionClass::StrafeLeft(bool keydown) {
+	float radians, ninetyDegrees;
+
+
+	// Update the forward speed movement based on the frame time and whether the user is holding the key down or not.
+	if (keydown)
+	{
+		m_leftSpeed += m_frameTime * 0.001f;
+
+		if (m_leftSpeed > (m_frameTime * 0.03f))
+		{
+			m_leftSpeed = m_frameTime * 0.03f;
+		}
+	}
+	else
+	{
+		m_leftSpeed -= m_frameTime * 0.0007f;
+
+		if (m_leftSpeed < 0.0f)
+		{
+			m_leftSpeed = 0.0f;
+		}
+	}
+
+	// Convert degrees to radians.
+	radians = m_rotationY * 0.0174532925f;
+
+	//
+	ninetyDegrees = 0.0174532925 * 90;
+
+	// Update the position.
+	m_positionX += sinf(radians - ninetyDegrees) * m_leftSpeed;
+	m_positionZ += cosf(radians - ninetyDegrees) * m_leftSpeed;
+
+	return;
+}
+
+void PositionClass::StrafeRight(bool keydown) {
+	float radians, ninetyDegrees;
+
+
+	// Update the forward speed movement based on the frame time and whether the user is holding the key down or not.
+	if (keydown)
+	{
+		m_rightSpeed += m_frameTime * 0.001f;
+
+		if (m_rightSpeed > (m_frameTime * 0.03f))
+		{
+			m_rightSpeed = m_frameTime * 0.03f;
+		}
+	}
+	else
+	{
+		m_rightSpeed -= m_frameTime * 0.0007f;
+
+		if (m_rightSpeed < 0.0f)
+		{
+			m_rightSpeed = 0.0f;
+		}
+	}
+
+	// Convert degrees to radians.
+	radians = m_rotationY * 0.0174532925f;
+
+	//
+	ninetyDegrees = 0.0174532925 * 90;
+
+	// Update the position.
+	m_positionX += sinf(radians + ninetyDegrees) * m_rightSpeed;
+	m_positionZ += cosf(radians + ninetyDegrees) * m_rightSpeed;
+
+	return;
+}
 
 void PositionClass::LookUpward(bool keydown)
 {

@@ -53,6 +53,8 @@ public:
 	bool IsF2Pressed();
 	bool IsLeftPressed();
 	bool IsRightPressed();
+	bool IsNum4Pressed();
+	bool IsNum6Pressed();
 	bool IsUpPressed();
 	bool IsDownPressed();
 	bool IsAPressed();

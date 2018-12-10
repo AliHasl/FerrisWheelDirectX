@@ -8,6 +8,7 @@ SystemClass::SystemClass()
 {
 	m_Input = 0;
 	m_Graphics = 0;
+	m_Sound = 0;
 }
 
 
@@ -58,12 +59,36 @@ bool SystemClass::Initialize()
 		return false;
 	}
 
+	// Create the sound object.
+	m_Sound = new SoundClass;
+	if (!m_Sound)
+	{
+		return false;
+	}
+
+	// Initialize the sound object.
+	result = m_Sound->Initialize(m_hwnd);
+	if (!result)
+	{
+		MessageBox(m_hwnd, L"Could not initialize Direct Sound.", L"Error", MB_OK);
+		return false;
+	}
+
 	return true;
 }
 
 
 void SystemClass::Shutdown()
 {
+	// Release the sound object.
+	if (m_Sound)
+	{
+		m_Sound->Shutdown();
+		delete m_Sound;
+		m_Sound = 0;
+	}
+
+
 	// Release the graphics object.
 	if (m_Graphics)
 	{
@@ -243,9 +268,9 @@ void SystemClass::InitializeWindows(int& screenWidth, int& screenHeight)
 	}
 	else
 	{
-		// If windowed then set it to 800x600 resolution.
-		screenWidth = 800;
-		screenHeight = 600;
+		// If windowed then set it to resolution MACRO in headerfile.
+		screenWidth = WINDOWED_WIDTH;
+		screenHeight = WINDOWED_HEIGHT;
 
 		// Place the window in the middle of the screen.
 		posX = (GetSystemMetrics(SM_CXSCREEN) - screenWidth) / 2;

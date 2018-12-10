@@ -9,6 +9,8 @@
 // PRE-PROCESSING DIRECTIVES //
 ///////////////////////////////
 #define WIN32_LEAN_AND_MEAN
+#define WINDOWED_WIDTH 1280
+#define WINDOWED_HEIGHT 1024
 
 
 //////////////
@@ -23,6 +25,7 @@
 //#include "applicationclass.h"
 #include "inputclass.h"
 #include "graphicsclass.h"
+#include "soundclass.h"
 
 ////////////////////////////////////////////////////////////////////////////////
 // Class name: SystemClass
@@ -53,6 +56,8 @@ private:
 	//ApplicationClass* m_Application;
 	InputClass* m_Input;
 	GraphicsClass* m_Graphics;
+
+	SoundClass* m_Sound;
 };
 
 

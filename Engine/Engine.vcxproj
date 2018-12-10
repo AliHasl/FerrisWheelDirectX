@@ -26,6 +26,7 @@
     <ClInclude Include="SceneClass.h" />
     <ClInclude Include="shadermanagerclass.h" />
     <ClInclude Include="SkyDome.h" />
+    <ClInclude Include="soundclass.h" />
     <ClInclude Include="systemclass.h" />
     <ClInclude Include="textureclass.h" />
     <ClInclude Include="textureshaderclass.h" />
@@ -49,6 +50,7 @@
     <ClCompile Include="SceneClass.cpp" />
     <ClCompile Include="shadermanagerclass.cpp" />
     <ClCompile Include="SkyDome.cpp" />
+    <ClCompile Include="soundclass.cpp" />
     <ClCompile Include="systemclass.cpp" />
     <ClCompile Include="textureclass.cpp" />
     <ClCompile Include="textureshaderclass.cpp" />
@@ -69,6 +71,7 @@
     <RootNamespace>Engine</RootNamespace>
     <Keyword>Win32Proj</Keyword>
     <WindowsTargetPlatformVersion>10.0.17134.0</WindowsTargetPlatformVersion>
+    <ProjectName>FerrisWheel</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">

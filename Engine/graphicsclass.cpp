@@ -13,9 +13,6 @@ GraphicsClass::GraphicsClass()
 	m_Light = 0;
 	m_Position = 0;
 	m_Camera = 0;
-	//m_Model1 = 0;
-	//m_Model2 = 0;
-	//m_Model3 = 0;
 	m_Scene = 0;
 	rideMode = false;
 }
@@ -258,11 +255,18 @@ bool GraphicsClass::HandleMovementInput(float frameTime)
 	if (!rideMode) {
 
 		// Handle the input.
-		keyDown = m_Input->IsLeftPressed();
+
+		keyDown = m_Input->IsNum4Pressed();
 		m_Position->TurnLeft(keyDown);
 
-		keyDown = m_Input->IsRightPressed();
+		keyDown = m_Input->IsNum6Pressed();
 		m_Position->TurnRight(keyDown);
+
+		keyDown = m_Input->IsLeftPressed();
+		m_Position->StrafeLeft(keyDown);
+
+		keyDown = m_Input->IsRightPressed();
+		m_Position->StrafeRight(keyDown);
 
 		keyDown = m_Input->IsUpPressed();
 		m_Position->MoveForward(keyDown);
@@ -283,8 +287,7 @@ bool GraphicsClass::HandleMovementInput(float frameTime)
 		m_Position->LookDownward(keyDown);
 	}
 	// HandleMouse Rotations
-	m_Position->MouseRotate(m_Input->GetMouseXDelta(),
-		m_Input->GetMouseYDelta());
+	m_Position->MouseRotate(m_Input->GetMouseXDelta(), m_Input->GetMouseYDelta());
 
 	if (!rideMode) {
 
@@ -298,9 +301,9 @@ bool GraphicsClass::HandleMovementInput(float frameTime)
 	}
 	else
 	{
+		//Set Camera position fixed to the cart matrix
 		m_Camera->SetPosition(cartMatrix(3,0), cartMatrix(3, 1), cartMatrix(3, 2));
 		
-
 		// Get the view point position/rotation.
 		//m_Position->GetPosition(posX, posY, posZ);
 		m_Position->GetRotation(rotX, rotY, rotZ);
@@ -314,8 +317,7 @@ bool GraphicsClass::HandleMovementInput(float frameTime)
 
 bool GraphicsClass::Render()
 {
-	static XMMATRIX worldMatrix, viewMatrix, projectionMatrix, translateMatrix, bearPositionMatrix;
-	//FXMVECTOR wheelVector;
+	static XMMATRIX worldMatrix, viewMatrix, projectionMatrix, bearPositionMatrix;
 	float m_X, m_Y, m_Z;
 	bool result;
 
@@ -334,48 +336,37 @@ bool GraphicsClass::Render()
 	m_D3D->GetWorldMatrix(worldMatrix);
 	m_Camera->GetViewMatrix(viewMatrix);
 	m_D3D->GetProjectionMatrix(projectionMatrix);
+
+	//Get the coordinates for the player position
 	m_Position->GetPosition(m_X, m_Y,m_Z);
-
+	//Render the Skybox
 	m_D3D->GetWorldMatrix(worldMatrix);
-
+	//Turn off Culling
 	m_D3D->TurnOffCulling();
-
+	//Turn off Z buffer
 	m_D3D->TurnZBufferOff();
 	
 	worldMatrix = XMMatrixMultiply(XMMatrixTranslation(m_X, m_Y, m_Z), worldMatrix);
 	worldMatrix = XMMatrixMultiply(XMMatrixScaling(-10.0f, 10.0f, 10.0f), worldMatrix);
 	
-	
-	//*input = XMMatrixMultiply(*input, tempMatrix);
-
-
-	//m_Scene->Transform(&worldMatrix, m_Scene->m_models[0]);
-	// Setup the rotation and translation of the first model.
-	/*
-	worldMatrix = XMMatrixRotationZ(rotation * 3.0f);
-	translateMatrix = XMMatrixTranslation(- 3.5f, 0.0f, 0.0f);
-	worldMatrix = XMMatrixMultiply(worldMatrix, translateMatrix);
-	*/
-	// Render the first model using the texture shader.
+	// Render the Skyboxs using the texture shader.
 	m_Scene->m_models[0]->Render(m_D3D->GetDeviceContext());
-	result = m_ShaderManager->RenderTextureShader(m_Scene->m_models[0], m_D3D->GetDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
+	result = m_ShaderManager->RenderTextureShader(m_Scene->m_models[0], m_D3D->GetDeviceContext(), 
+												  worldMatrix, viewMatrix, projectionMatrix);
+
 	if (!result)
 	{
 		return false;
 	}
-
+	//Turn On Culling
 	m_D3D->TurnOnCulling();
-
+	//Turn On Z Buffer
 	m_D3D->TurnZBufferOn();
-
 
 	//Rendering the ground
 	m_D3D->GetWorldMatrix(worldMatrix);
-
-
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(0.0f, -30.0f, 0.0f));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(0.0f, -24.0f, 120.0f));
 	worldMatrix = XMMatrixMultiply(XMMatrixScaling(2.0f, 2.0f, 2.0f), worldMatrix);
-
 
 	m_Scene->m_models[1]->Render(m_D3D->GetDeviceContext());
 	result = m_ShaderManager->RenderTextureShader(m_Scene->m_models[1], m_D3D->GetDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
@@ -384,123 +375,97 @@ bool GraphicsClass::Render()
 		return false;
 	}
 
-
-
-
 	// Setup the rotation and translation of the ferrisWheelBase model.
 	m_D3D->GetWorldMatrix(worldMatrix);
 
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixScaling(0.3f, 0.3f, 0.3f));
-
-
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationY(-(float)XM_PIDIV2));
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(0.0f, 135.0f, 100.0f));
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(0.0f, 140.0f, 200.0f));
 
+	//Set the ferrisPositionMatrix to be used for other components later
 	ferrisPositionMatrix = worldMatrix;
 
 	// Render the second model using the light shader.
 	m_Scene->m_models[2]->Render(m_D3D->GetDeviceContext());
-	result = m_ShaderManager->RenderLightShader(m_Scene->m_models[2], m_D3D->GetDeviceContext(), worldMatrix, viewMatrix, projectionMatrix,
-		m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
-		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	result = m_ShaderManager->RenderLightShader(m_Scene->m_models[2], m_D3D->GetDeviceContext(), 
+												worldMatrix, viewMatrix, projectionMatrix, m_Light->GetDirection(), 
+												m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(), m_Camera->GetPosition(), 
+												m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+
 	if (!result)
 	{
 		return false;
 	}
 
-	// Setup the rotation and translation of the third model.
+	// Setup the rotation and translation of the ferrisWheel Wheel model.
 	m_D3D->GetWorldMatrix(worldMatrix);
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixRotationX(rotation));
 	worldMatrix = XMMatrixMultiply(worldMatrix, ferrisPositionMatrix);
-
-	//worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixScaling(0.3f, 0.3f, 0.3f));
-	//worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(-80.0f, 135.0f, 0.0f));
-
-	
-	//worldMatrix = XMMatrixMultiply(ferrisPositionMatrix, worldMatrix);
-	//worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(-10.0f, 0.0f, 0.0f));
-
-	//wheelMatrix = worldMatrix;
-
-	//wheelVector = (-10.0f, 0.0f, 0.0f);
 	
 	// Render the third model using the light shader.
 	m_Scene->m_models[3]->Render(m_D3D->GetDeviceContext());
-	result = m_ShaderManager->RenderLightShader(m_Scene->m_models[3], m_D3D->GetDeviceContext(), worldMatrix, viewMatrix, projectionMatrix,
-		m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
-		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+	result = m_ShaderManager->RenderLightShader(m_Scene->m_models[3], m_D3D->GetDeviceContext(), worldMatrix, viewMatrix, 
+												projectionMatrix, m_Light->GetDirection(), m_Light->GetAmbientColor(), 
+												m_Light->GetDiffuseColor(), m_Camera->GetPosition(), m_Light->GetSpecularColor(), 
+												m_Light->GetSpecularPower());
+
 	if (!result)
 	{
 		return false;
 	}
-	/*
-	// Setup the rotation and translation of the fourth model.
-	m_D3D->GetWorldMatrix(worldMatrix);
-
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixScaling(0.03f, 0.03f, 0.03f));
-	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(-10.0f, cos(rotation)* -11.05f, sin(rotation)* -11.05f));
-
-
-	// Render the fourth model using the light shader.
-	m_Scene->m_models[3]->Render(m_D3D->GetDeviceContext());
-	result = m_ShaderManager->RenderLightShader(m_Scene->m_models[3], m_D3D->GetDeviceContext(), worldMatrix, viewMatrix, projectionMatrix,
-		m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
-		m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
-	if (!result)
-	{
-		return false;
-	}
-	*/
-
-
+	
 	//set cart matrix here test
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(cos(rotation)* 110.5f, sin(rotation)* 110.5f, 0.0f));
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(0.0f, -10.0f, 0.0f));
 	cartMatrix = worldMatrix;
 
+
+	//Render instances of carts
 	float t = 0;
 	int nSegment = 32;
-
 	float dt = ((2 * (float)XM_PI) / nSegment);
 
+	//Repeat for 32 times in a circle
 	while (t < (2 * (float)XM_PI)) {
-		// Setup the rotation and translation of the fourth model.
+		// Setup the rotation and translation of the first cart model.
 		m_D3D->GetWorldMatrix(worldMatrix);
 
-		worldMatrix = XMMatrixMultiply(ferrisPositionMatrix, worldMatrix);
-		
-		worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(cos(rotation + t)* 110.5f, sin(rotation + t)* 110.5f, 0.0f));
+		worldMatrix = XMMatrixMultiply(ferrisPositionMatrix, worldMatrix);		
+		worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(cosf(rotation + t)* 110.5f, 
+																		sinf(rotation + t)* 110.5f, 0.0f));
 		worldMatrix = XMMatrixMultiply(XMMatrixRotationY((float)XM_PI), worldMatrix);
-		
 
-		// Render the fourth model using the light shader.
+		// Render the first cart model using the light shader.
 		m_Scene->m_models[4]->Render(m_D3D->GetDeviceContext());
-		result = m_ShaderManager->RenderLightShader(m_Scene->m_models[4], m_D3D->GetDeviceContext(), worldMatrix, viewMatrix, projectionMatrix,
-			m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
-			m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+		result = m_ShaderManager->RenderLightShader(m_Scene->m_models[4], m_D3D->GetDeviceContext(), worldMatrix, 
+													viewMatrix, projectionMatrix, m_Light->GetDirection(), 
+													m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+													m_Camera->GetPosition(), m_Light->GetSpecularColor(), 
+													m_Light->GetSpecularPower());
 		if (!result)
 		{
 			return false;
 		}
 
-		// Setup the rotation and translation of the fourth model.
+		// Setup the rotation and translation of the second cart model.
 		m_D3D->GetWorldMatrix(worldMatrix);
 
-		worldMatrix = XMMatrixMultiply(ferrisPositionMatrix, worldMatrix);
-		
-		worldMatrix = XMMatrixMultiply(ferrisPositionMatrix, XMMatrixTranslation(cos(rotation + (t + dt))* 110.5f, sin(rotation + (t + dt))* 110.5f, 0.0f));
+		worldMatrix = XMMatrixMultiply(ferrisPositionMatrix, worldMatrix);		
+		worldMatrix = XMMatrixMultiply(ferrisPositionMatrix, XMMatrixTranslation(cosf(rotation + (t + dt))* 110.5f, sinf(rotation + (t + dt))* 110.5f, 0.0f));
 		worldMatrix = XMMatrixMultiply(XMMatrixRotationY((float)XM_PI), worldMatrix);
 
-		// Render the fourth model using the light shader.
+		// Render the second cart model using the light shader.
 		m_Scene->m_models[5]->Render(m_D3D->GetDeviceContext());
 		result = m_ShaderManager->RenderLightShader(m_Scene->m_models[5], m_D3D->GetDeviceContext(), worldMatrix, viewMatrix, projectionMatrix,
-			m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
-			m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+													m_Light->GetDirection(), m_Light->GetAmbientColor(), m_Light->GetDiffuseColor(),
+													m_Camera->GetPosition(), m_Light->GetSpecularColor(), m_Light->GetSpecularPower());
+
 		if (!result)
 		{
 			return false;
 		}
 
+		//Iterate t for next cycle
 		t += 2*dt;
 	
 	}
@@ -510,8 +475,9 @@ bool GraphicsClass::Render()
 	
 	worldMatrix = XMMatrixRotationX((float)XM_PIDIV2);
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixScaling(0.03f, 0.03f, 0.03f));
-	translateMatrix = XMMatrixTranslation(0.0f, -8.0f, 0.0f);
-	worldMatrix = XMMatrixMultiply(worldMatrix, translateMatrix);
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(0.0f, -2.0f, 20.0f));
+
+	//Set the bearPositionMatrix
 	bearPositionMatrix = worldMatrix;
 
 	//Render the bear
@@ -522,38 +488,23 @@ bool GraphicsClass::Render()
 		return false;
 	}
 
-	//Do the Ball
-	
-	//m_D3D->GetWorldMatrix(worldMatrix);
-
-	//worldMatrix = XMMatrixRotationX((float)XM_PIDIV2);
-	//worldMatrix = XMMatrixRotationY(rotation);
-	
-	//worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixScaling(0.03f, 0.03f, 0.03f));
-	translateMatrix = XMMatrixTranslation(0.0f, 1.0f, 0.0f);
-	worldMatrix = XMMatrixMultiply(worldMatrix, translateMatrix);
-	
-	//Render the Ball
-	m_Scene->m_models[9]->Render(m_D3D->GetDeviceContext());
-	result = m_ShaderManager->RenderTextureShader(m_Scene->m_models[9], m_D3D->GetDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
+	//Render the Hat
+	m_Scene->m_models[10]->Render(m_D3D->GetDeviceContext());
+	result = m_ShaderManager->RenderTextureShader(m_Scene->m_models[10], m_D3D->GetDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
 	if (!result)
 	{
 		return false;
 	}
 
-	//Do the Hat
+	//Position the Ball
+	m_D3D->GetWorldMatrix(worldMatrix);
+	worldMatrix = XMMatrixRotationX(rotation);
+	worldMatrix = XMMatrixMultiply(worldMatrix, bearPositionMatrix);
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(0.0f, 1.0f, 0.0f));
 
-	//m_D3D->GetWorldMatrix(worldMatrix);
-
-	//worldMatrix = XMMatrixRotationX((float)XM_PIDIV2);
-
-	//worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixScaling(0.03f, 0.03f, 0.03f));
-	translateMatrix = XMMatrixTranslation(0.0f, -1.0f, 0.0f);
-	worldMatrix = XMMatrixMultiply(worldMatrix, translateMatrix);
-
-	//Render the Hat
-	m_Scene->m_models[10]->Render(m_D3D->GetDeviceContext());
-	result = m_ShaderManager->RenderTextureShader(m_Scene->m_models[10], m_D3D->GetDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
+	//Render the Ball
+	m_Scene->m_models[9]->Render(m_D3D->GetDeviceContext());
+	result = m_ShaderManager->RenderTextureShader(m_Scene->m_models[9], m_D3D->GetDeviceContext(), worldMatrix, viewMatrix, projectionMatrix);
 	if (!result)
 	{
 		return false;
@@ -563,11 +514,8 @@ bool GraphicsClass::Render()
 	m_D3D->GetWorldMatrix(worldMatrix);
 	worldMatrix = XMMatrixRotationY(rotation / 3.0f);
 	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixScaling(0.03f, 0.03f, 0.03f));
-	translateMatrix = XMMatrixTranslation(-50.0f, 100.0f, 200.0f);
-	worldMatrix = XMMatrixMultiply(worldMatrix, translateMatrix);
+	worldMatrix = XMMatrixMultiply(worldMatrix, XMMatrixTranslation(-50.0f, 200.0f, 400.0f));
 
-	
-	
 	// Render the Balloon model using the bump map shader.
 	m_Scene->m_models[11]->Render(m_D3D->GetDeviceContext());
 	result = m_ShaderManager->RenderBumpMapShader(m_Scene->m_models[11], m_D3D->GetDeviceContext(), worldMatrix, viewMatrix, projectionMatrix, 
